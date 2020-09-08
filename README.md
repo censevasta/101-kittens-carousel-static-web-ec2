@@ -1,1 +1,0 @@
-# 101-kittens-carousel-static-web-ec2
