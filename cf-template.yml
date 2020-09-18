@@ -1,28 +1,50 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This template creates an EC2 instance to run static web site with Apache web server
+Description: |
+  Cloudformation Template for Kittens Carousel Static Website on EC2. This template deploys Kittens Carou
 Resources:
-  CengizCFInstance: 
-    Type: AWS::EC2::Instance
+  WebServerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
-      ImageId:  ami-0c94855ba95c71c99
+      GroupDescription: Enable HTTP for Apache Web Server and ssh for terminal
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        Key: Name
+        Value: My first Security Group from cloudformation
+  WebServerHost:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-0c94855ba95c71c99 
       InstanceType: t2.micro
       KeyName: bi_bizim_yeni_anahtarimiz
-      SecurityGroups:
-        - launch-wizard-4
-      Tags: 
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      Tags:
         - Key: Name
-          Value: Web server of Kittens Carousel
-      UserData:
+          Value: !Sub Web Server of ${AWS::StackName} Stack
+      UserData: 
         Fn::Base64:
           !Sub |
-          #! /bin/bash
-          sudo yum update -y
-          sudo yum install httpd -y
-          sudo systemctl start httpd
-          sudo systemctl enable httpd
-          sudo chmod -R 777 /var/www/html
-          cd /var/www/html
-          wget https://raw.githubusercontent.com/censevasta/101-kittens-carousel-static-web-ec2/master/static-web/index.html 
-          wget https://raw.githubusercontent.com/censevasta/101-kittens-carousel-static-web-ec2/master/static-web/cat0.jpg
-          wget https://raw.githubusercontent.com/censevasta/101-kittens-carousel-static-web-ec2/master/static-web/cat1.jpg
-          wget https://raw.githubusercontent.com/censevasta/101-kittens-carousel-static-web-ec2/master/static-web/cat2.jpg 
+            #! /bin/bash
+            yum update -y
+            yum install httpd -y
+            cd /var/www/html/
+            wget https://raw.githubusercontent.com/serdarcw/clarusway-aws-eu-workshop/master/aws/projects
+            wget https://raw.githubusercontent.com/serdarcw/clarusway-aws-eu-workshop/master/aws/projects
+            wget https://raw.githubusercontent.com/serdarcw/clarusway-aws-eu-workshop/master/aws/projects
+            wget https://raw.githubusercontent.com/serdarcw/clarusway-aws-eu-workshop/master/aws/projects
+            systemctl start httpd
+            systemctl enable httpd
+Outputs:
+  WebsiteURL:
+    Value: !Sub 
+      - http://${PublicAddress}
+      - PublicAddress: !GetAtt WebServerHost.PublicDnsName
+    Description: Kittens Carousel Application URL
